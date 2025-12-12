@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Face Enroll</title>
+</head>
+<body>
+
+<h2>Face Enrollment</h2>
+
+<label>Name:</label>
+<input type="text" id="personId" placeholder="Enter name" />
+<br><br>
+
+<video id="video" width="320" height="240" autoplay></video>
+<br>
+
+<button onclick="startCamera()">Start Camera</button>
+<button onclick="capture()">Capture</button>
+<button onclick="enroll()">Save</button>
+
+<canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+<script>
+let stream = null;
+let capturedBlob = null;
+
+async function startCamera() {
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    document.getElementById("video").srcObject = stream;
+}
+
+function capture() {
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob(blob => {
+        capturedBlob = blob;
+        alert("Captured!");
+    }, "image/jpeg");
+}
+
+async function enroll() {
+    const personId = document.getElementById("personId").value;
+    if (!personId || !capturedBlob) {
+        alert("Name or image missing");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", capturedBlob, "capture.jpg");
+
+    const res = await fetch(`/enroll/${personId}`, {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await res.json();
+    alert(JSON.stringify(data));
+}
+</script>
+
+</body>
+</html>

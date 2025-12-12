@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-multipart
+
+opencv-python
+numpy
+pillow
+torch
+torchvision
+
+ultralytics
+huggingface-hub
+
+requests
