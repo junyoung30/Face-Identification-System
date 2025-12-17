@@ -4,12 +4,14 @@ import cv2
 from app.services.pipeline import process_uploaded_image
 from app.services.embedder import FaceEmbedder
 from app.services.gallery import save_embedding
-from app.config import PROJECT_ROOT
+from app.config import WEIGHT_PATH
+
 
 router = APIRouter()
 
-WEIGHT_PATH = PROJECT_ROOT / "weights" / "FaceNet_MobileNetV2_Epoch100.pth"
+
 embedder = FaceEmbedder(weight_path=WEIGHT_PATH)
+
 
 @router.post("/enroll/{person_id}")
 async def enroll_person(

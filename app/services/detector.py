@@ -6,23 +6,6 @@ from huggingface_hub import hf_hub_download
 from typing import Optional, Tuple
 
 
-# _model = None
-# _model_path = None
-
-
-# def get_model() -> YOLO:
-#     global _model, _model_path
-
-#     if _model is None:
-#         if _model_path is None:
-#             _model_path = hf_hub_download(
-#                 repo_id="AdamCodd/YOLOv11n-face-detection",
-#                 filename="model.pt"
-#             )
-
-#         _model = YOLO(_model_path)
-
-#     return _model
 
 _model_path = hf_hub_download(
     repo_id="AdamCodd/YOLOv11n-face-detection", 
@@ -31,7 +14,7 @@ _model_path = hf_hub_download(
 _model = YOLO(_model_path)
 
 
-def expand_bbox(
+def _expand_bbox(
     x1: int, 
     y1: int, 
     x2: int, 
@@ -57,21 +40,16 @@ def expand_bbox(
 
 
 
-def detect_face(
-    image_path: Path,
+def detect_face_from_image(
+    img: np.ndarray,
     margin_x: float = 0.3,
     margin_y: float = 0.2
 ):
-#     model = get_model()
-    
-    img = cv2.imread(str(image_path))
-    if img is None:
-        return None
-    
+
     h, w, _ = img.shape
     
     results = _model.predict(
-        source=str(image_path),
+        source=img,
         save=False,
         verbose=False,
     )
@@ -88,7 +66,7 @@ def detect_face(
         x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
         x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
     
-        px1, py1, px2, py2 = expand_bbox(
+        px1, py1, px2, py2 = _expand_bbox(
             x1, y1, x2, y2,
             img_w=w, img_h=h,
             margin_x=margin_x,
@@ -99,4 +77,21 @@ def detect_face(
         return cropped
     
     return None
+    
+
+def detect_face(
+    img_path: Path,
+    margin_x: float = 0.3,
+    margin_y: float = 0.2
+):
+    img = cv2.imread(str(img_path))
+    if img is None:
+        return None
+    
+    return detect_face_from_image(
+        img,
+        margin_x=margin_x,
+        margin_y=margin_y
+    )
+    
     

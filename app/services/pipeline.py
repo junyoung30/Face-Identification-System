@@ -2,11 +2,12 @@ from fastapi import UploadFile
 from pathlib import Path
 import cv2
 from datetime import datetime
+import numpy as np
 
 from app.config import RAW_DIR, CROPPED_DIR
 from app.services.storage import save_image
 from app.services.detector import detect_face
-
+from app.services.gallery import load_gallery, compute_prototype
 
 
 def process_uploaded_image(
@@ -57,3 +58,50 @@ def process_uploaded_image(
         "person_id": target_person
     }
     
+    
+def identify_from_embedding(
+    embedding: np.ndarray,
+    threshold: float = 0.8
+) -> dict:
+    
+    gallery = load_gallery()
+    if len(gallery) == 0:
+        return {
+            "status": "empty gallery"
+        }
+
+    best_person = None
+    best_score = float("inf")
+    
+    for person_id, embeddings in gallery.items():
+        if len(embeddings) == 0:
+            continue
+            
+        proto = compute_prototype(embeddings)
+        proto = proto / np.linalg.norm(proto)
+        
+        score = float(np.linalg.norm(embedding - proto))
+        
+        if score < best_score:
+            best_score = score
+            best_person = person_id
+            
+    if best_score > threshold:
+        return {
+            "status": "unknown",
+            "score": best_score
+        }
+    
+    return {
+        "status": "identified",
+        "person_id": best_person,
+        "score": best_score
+    }
+    
+    
+
+
+
+
+
+

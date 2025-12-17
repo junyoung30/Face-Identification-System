@@ -1,53 +1,51 @@
 <!DOCTYPE html>
 <html>
 <body>
-    <h1>Test Page</h1>
+    <h1>Identify Page</h1>
 
     <video id="camera" width="400" height="300" autoplay></video>
 
     <div>
-        <label>이름:</label>
-        <input type="text" id="personId" placeholder="사람 이름 입력"/>
-    </div>
-
-    <div>
         <button id="btn-start">카메라 켜기</button>
         <button id="btn-capture">사진 찍기</button>
-        <button id="btn-register">등록하기</button>
+        <button id="btn-identify">식별하기</button>
     </div>
 
     <canvas id="canvas" style="display:none;"></canvas>
 
+    <pre id="result"></pre>
+
     <script>
         const video = document.getElementById("camera");
         const canvas = document.getElementById("canvas");
+        const resultBox = document.getElementById("result");
 
         const btnStart = document.getElementById("btn-start");
         const btnCapture = document.getElementById("btn-capture");
-        const btnRegister = document.getElementById("btn-register");
+        const btnIdentify = document.getElementById("btn-identify");
 
         let stream = null;
         let captureBlob = null;
 
         btnStart.onclick = startCamera;
         btnCapture.onclick = capturePhoto;
-        btnRegister.onclick = registerPhoto;
+        btnIdentify.onclick = identifyPhoto;
 
         function startCamera() {
-            navigator.mediaDevices.getUserMedia({video: true})
+            navigator.mediaDevices.getUserMedia({ video: true })
                 .then(s => {
                     stream = s;
                     video.srcObject = stream;
-                    console.log("카메라 시작됨");
+                    console.log("카메라 시작");
                 })
                 .catch(err => {
-                    console.error("카메라 에러:", err)
-                });
+                    console.error("카메라 에러:", err);
+                })
         }
 
         function capturePhoto() {
             if (!stream) {
-                alert("카메라가 켜져있지 않습니다");
+                alert("카메라가 켜져있지 않습니다.");
                 return;
             }
 
@@ -61,44 +59,37 @@
             canvas.toBlob(blob => {
                 if (!blob) {
                     alert("이미지 생성 실패");
-                    return;
+                    return
                 }
 
                 captureBlob = blob;
                 console.log("이미지 캡쳐 완료:", blob);
-                alert("사진이 캡쳐되었습니다");
-            }, "image/jpeg")
+                alert("사진이 캡쳐되었습니다.");
+            }, "image/jpeg");
         }
 
-        function registerPhoto() {
-            const personId = document.getElementById("personId").value.trim();
-            
-            if (!personId) {
-                alert("이름을 입력해주세요");
-                return;
-            }
-
+        function identifyPhoto() {
             if (!captureBlob) {
                 alert("먼저 사진을 찍어주세요");
                 return;
             }
 
-            const formData = new FormData();
+            const formData = new FormData;
             formData.append("file", captureBlob, "capture.jpg");
 
-            fetch(`/enroll/${personId}`, {
+            fetch("/identify", {
                 method: "POST",
-                body: formData
+                bocy: formData
             })
             .then(res => res.json())
             .then(data => {
                 console.log("서버 응답:", data);
-                alert("등록 완료");
+                resultBox.textContent = JSON.stringify(data, null, 2);
             })
             .catch(err => {
-                console.error("등록 실패:", err);
-                alert("등록 실패");
-            });
+                console.error("식별 실패:", err);
+                alert("식별 실패");
+            })
         }
     </script>
 </body>
