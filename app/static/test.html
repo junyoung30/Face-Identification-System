@@ -1,96 +1,177 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>얼굴 등록</title>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            width: 420px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 10px;
+            background: black;
+        }
+
+        .field {
+            margin-top: 15px;
+        }
+
+        label {
+            font-size: 14px;
+            color: #444;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        .buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .btn.start { background: #2563eb; }
+        .btn.capture { background: #059669; }
+        .btn.register { background: #7c3aed; }
+
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #333;
+            text-align: center;
+        }
+    </style>
+</head>
+
 <body>
-    <h1>Identify Page</h1>
+<div class="container">
+    <h1>얼굴 등록</h1>
+    
+    <video id="camera" autoplay></video>
 
-    <video id="camera" width="400" height="300" autoplay></video>
-
-    <div>
-        <button id="btn-start">카메라 켜기</button>
-        <button id="btn-capture">사진 찍기</button>
-        <button id="btn-identify">식별하기</button>
+    <div class="field">
+        <label>이름</label>
+        <input type="text" id="personId" placeholder="사람 이름 입력">
     </div>
 
+    <div class="buttons">
+        <button class="btn start" id="btn-start">카메라</button>
+        <button class="btn capture" id="btn-capture">촬영</button>
+        <button class="btn register" id="btn-register">등록</button>
+    </div>
+
+    <div class="status" id="status">카메라를 켜주세요</div>
+
     <canvas id="canvas" style="display:none;"></canvas>
+</div>
 
-    <pre id="result"></pre>
+<script>
+    const video = document.getElementById("camera");
+    const canvas = document.getElementById("canvas");
 
-    <script>
-        const video = document.getElementById("camera");
-        const canvas = document.getElementById("canvas");
-        const resultBox = document.getElementById("result");
+    const btnStart = document.getElementById("btn-start");
+    const btnCapture = document.getElementById("btn-capture");
+    const btnRegister = document.getElementById("btn-register");
+    const statusText = document.getElementById("status");
 
-        const btnStart = document.getElementById("btn-start");
-        const btnCapture = document.getElementById("btn-capture");
-        const btnIdentify = document.getElementById("btn-identify");
+    let stream = null;
+    let captureBlob = null;
 
-        let stream = null;
-        let captureBlob = null;
+    btnStart.onclick = startCamera;
+    btnCapture.onclick = capturePhoto;
+    btnRegister.onclick = registerPhoto;
 
-        btnStart.onclick = startCamera;
-        btnCapture.onclick = capturePhoto;
-        btnIdentify.onclick = identifyPhoto;
-
-        function startCamera() {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(s => {
-                    stream = s;
-                    video.srcObject = stream;
-                    console.log("카메라 시작");
-                })
-                .catch(err => {
-                    console.error("카메라 에러:", err);
-                })
-        }
-
-        function capturePhoto() {
-            if (!stream) {
-                alert("카메라가 켜져있지 않습니다.");
-                return;
-            }
-
-            const ctx = canvas.getContext("2d");
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            canvas.toBlob(blob => {
-                if (!blob) {
-                    alert("이미지 생성 실패");
-                    return
-                }
-
-                captureBlob = blob;
-                console.log("이미지 캡쳐 완료:", blob);
-                alert("사진이 캡쳐되었습니다.");
-            }, "image/jpeg");
-        }
-
-        function identifyPhoto() {
-            if (!captureBlob) {
-                alert("먼저 사진을 찍어주세요");
-                return;
-            }
-
-            const formData = new FormData;
-            formData.append("file", captureBlob, "capture.jpg");
-
-            fetch("/identify", {
-                method: "POST",
-                bocy: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                console.log("서버 응답:", data);
-                resultBox.textContent = JSON.stringify(data, null, 2);
+    function startCamera() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(s => {
+                stream = s;
+                video.srcObject = stream;
+                btnCapture.disabled = false;
+                statusText.innerText = "카메라가 켜졌습니다";
             })
             .catch(err => {
-                console.error("식별 실패:", err);
-                alert("식별 실패");
-            })
-        }
-    </script>
+                statusText.innerText = "카메라 접근 실패";
+                console.error(err);
+            });
+    }
+
+    function capturePhoto() {
+        const ctx = canvas.getContext("2d");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+
+        canvas.toBlob(blob => {
+            captureBlob = blob;
+            btnRegister.disabled = false;
+            statusText.innerText = "사진이 캡쳐되었습니다";
+        }, "image/jpeg");
+    }
+
+    function registerPhoto() {
+        const personId = document.getElementById("personId").value.trim();
+        if (!personId || !captureBlob) return;
+
+        const formData = new FormData();
+        formData.append("file", captureBlob, "capture.jpg");
+
+        fetch(`/enroll/${personId}`, {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(() => {
+            statusText.innerText = "등록 완료";
+        })
+        .catch(() => {
+            statusText.innerText = "등록 실패";
+        });
+    }
+</script>
+
 </body>
 </html>

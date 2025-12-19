@@ -1,96 +1,205 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Face Identification</title>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            width: 440px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        video {
+            width: 100%;
+            border-radius: 10px;
+            background: black;
+        }
+
+        .buttons {
+            margin-top: 18px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .btn.start { background: #2563eb; }
+        .btn.capture { background: #059669; }
+        .btn.identify { background: #7c3aed; }
+
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .result-card {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .result-card.identified {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+
+        .result-card.unknown {
+            background: #fef2f2;
+            border: 1px solid #ef4444;
+            color: #7f1d1d;
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .result-score {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+
+        .status {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 13px;
+            color: #333;
+        }
+    </style>
+</head>
+
 <body>
-    <h1>Identify Page</h1>
+<div class="container">
+    <h1>Face Identification</h1>
 
-    <video id="camera" width="400" height="300" autoplay></video>
+    <video id="camera" autoplay></video>
 
-    <div>
-        <button id="btn-start">카메라 켜기</button>
-        <button id="btn-capture">사진 찍기</button>
-        <button id="btn-identify">식별하기</button>
+    <div class="buttons">
+        <button class="btn start" id="btn-start">카메라</button>
+        <button class="btn capture" id="btn-capture" disabled>촬영</button>
+        <button class="btn identify" id="btn-identify" disabled>식별</button>
+    </div>
+
+    <div class="status" id="status">카메라를 켜주세요</div>
+
+    <div class="result-card" id="result-card">
+        <div class="result-title" id="result-title"></div>
+        <div class="result-score" id="result-score"></div>
     </div>
 
     <canvas id="canvas" style="display:none;"></canvas>
+</div>
 
-    <pre id="result"></pre>
+<script>
+    const video = document.getElementById("camera");
+    const canvas = document.getElementById("canvas");
 
-    <script>
-        const video = document.getElementById("camera");
-        const canvas = document.getElementById("canvas");
-        const resultBox = document.getElementById("result");
+    const btnStart = document.getElementById("btn-start");
+    const btnCapture = document.getElementById("btn-capture");
+    const btnIdentify = document.getElementById("btn-identify");
 
-        const btnStart = document.getElementById("btn-start");
-        const btnCapture = document.getElementById("btn-capture");
-        const btnIdentify = document.getElementById("btn-identify");
+    const statusText = document.getElementById("status");
+    const resultCard = document.getElementById("result-card");
+    const resultTitle = document.getElementById("result-title");
+    const resultScore = document.getElementById("result-score");
 
-        let stream = null;
-        let captureBlob = null;
+    let stream = null;
+    let captureBlob = null;
 
-        btnStart.onclick = startCamera;
-        btnCapture.onclick = capturePhoto;
-        btnIdentify.onclick = identifyPhoto;
+    btnStart.onclick = startCamera;
+    btnCapture.onclick = capturePhoto;
+    btnIdentify.onclick = identifyPhoto;
 
-        function startCamera() {
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(s => {
-                    stream = s;
-                    video.srcObject = stream;
-                    console.log("카메라 시작");
-                })
-                .catch(err => {
-                    console.error("카메라 에러:", err);
-                })
-        }
-
-        function capturePhoto() {
-            if (!stream) {
-                alert("카메라가 켜져있지 않습니다.");
-                return;
-            }
-
-            const ctx = canvas.getContext("2d");
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            canvas.toBlob(blob => {
-                if (!blob) {
-                    alert("이미지 생성 실패");
-                    return
-                }
-
-                captureBlob = blob;
-                console.log("이미지 캡쳐 완료:", blob);
-                alert("사진이 캡쳐되었습니다.");
-            }, "image/jpeg");
-        }
-
-        function identifyPhoto() {
-            if (!captureBlob) {
-                alert("먼저 사진을 찍어주세요");
-                return;
-            }
-
-            const formData = new FormData;
-            formData.append("file", captureBlob, "capture.jpg");
-
-            fetch("/identify", {
-                method: "POST",
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                console.log("서버 응답:", data);
-                resultBox.textContent = JSON.stringify(data, null, 2);
+    function startCamera() {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(s => {
+                stream = s;
+                video.srcObject = stream;
+                btnCapture.disabled = false;
+                statusText.innerText = "카메라가 켜졌습니다";
             })
             .catch(err => {
-                console.error("식별 실패:", err);
-                alert("식별 실패");
-            })
+                statusText.innerText = "카메라 접근 실패";
+                console.error(err);
+            });
+    }
+
+    function capturePhoto() {
+        const ctx = canvas.getContext("2d");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+
+        canvas.toBlob(blob => {
+            captureBlob = blob;
+            btnIdentify.disabled = false;
+            statusText.innerText = "사진이 캡쳐되었습니다";
+        }, "image/jpeg");
+    }
+
+    function identifyPhoto() {
+        if (!captureBlob) return;
+
+        const formData = new FormData();
+        formData.append("file", captureBlob, "capture.jpg");
+
+        fetch("/identify", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            showResult(data);
+        })
+        .catch(() => {
+            statusText.innerText = "식별 실패";
+        });
+    }
+
+    function showResult(data) {
+        resultCard.style.display = "block";
+
+        if (data.status === "identified") {
+            resultCard.className = "result-card identified";
+            resultTitle.innerText = `식별 결과: ${data.person_id}`;
+            resultScore.innerText = `Score: ${data.score.toFixed(4)}`;
+        } else {
+            resultCard.className = "result-card unknown";
+            resultTitle.innerText = "식별 결과: Unknown";
+            resultScore.innerText = `Score: ${data.score.toFixed(4)}`;
         }
-    </script>
+    }
+</script>
 </body>
 </html>

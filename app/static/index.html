@@ -1,16 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
+    <meta charset="UTF-8">
     <title>Face Identification System</title>
-</head>
-<body>
-    <h1>Face Identification System</h1>
 
-    <a href="/static/enroll.html">
-        <button>얼굴 등록</button>
-    </a>
-    <a href="/static/identify.html">
-        <button>얼굴 식별</button>
-    </a>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            font-family: "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            padding: 40px 60px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            min-width: 320px;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            font-size: 26px;
+            font-weight: 600;
+            color: #222;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin: 12px 0;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #2563eb;
+            color: white;
+            transition: background 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #1e40af;
+        }
+
+        
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>얼굴 식별 시스템</h1>
+
+        <a href="/static/enroll.html">
+            <button class="btn">얼굴 등록</button>
+        </a>
+
+        <a href="/static/identify.html">
+            <button class="btn">얼굴 식별</button>
+        </a>
+
+        <a href="/static/gallery.html">
+            <button class="btn">등록된 얼굴 목록</button>
+        </a>
+    </div>
 </body>
 </html>
