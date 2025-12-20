@@ -6,7 +6,7 @@ from pathlib import Path
 from torchvision import transforms
 from typing import Optional
 
-from app.models.facenet import FaceNet_MobileNetV3Large
+from app.models.facenet import FaceNet_MobileNetV3Large, FaceNet_EfficientNet
 
 
 
@@ -21,6 +21,7 @@ class FaceEmbedder:
         self.device = device if torch.cuda.is_available() else "cpu"
         
         self.model = FaceNet_MobileNetV3Large(embedding_size=embedding_size)
+#         self.model = FaceNet_EfficientNet(embedding_size=embedding_size, version='b1')
         self.model.load_state_dict(
             torch.load(weight_path, map_location=self.device)['model_state_dict']
         )
@@ -29,7 +30,7 @@ class FaceEmbedder:
         
         self.transform = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize((224, 224)),
+            transforms.Resize((112, 112)),
             transforms.ToTensor(),
             transforms.Normalize(
                 mean=[0.5, 0.5, 0.5],

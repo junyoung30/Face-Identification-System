@@ -29,10 +29,27 @@
             font-size: 22px;
         }
 
+        .video-wrapper {
+            position: relative;
+            width: 100%
+        }
+
         video {
             width: 100%;
             border-radius: 10px;
             background: black;
+        }
+
+        .face-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 45%;
+            height: 65%;
+            transform: translate(-50%, -50%);
+            border: 4px dashed rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            pointer-events: none;
         }
 
         .field {
@@ -91,7 +108,11 @@
 <div class="container">
     <h1>얼굴 등록</h1>
     
-    <video id="camera" autoplay></video>
+    <div class="video-wrapper">
+        <video id="camera" autoplay></video>
+
+        <div class="face-guide"></div>
+    </div>
 
     <div class="field">
         <label>이름</label>

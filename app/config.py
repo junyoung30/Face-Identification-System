@@ -14,5 +14,9 @@ GALLERY_DIR.mkdir(parents=True, exist_ok=True)
 WEIGHT_PATH = (
     PROJECT_ROOT
     / "weights"
-    / "FaceNet_MobileNetV3_P100_Epoch100.pth"
+    / "FaceNet_MobileNetV3Large_K200_UK100_Epoch100.pth"
 )
+
+# FaceNet_MobileNetV3_P100_Epoch100.pth
+# FaceNet_EfficientNetB1_K200_UK100_Epoch100.pth
+# FaceNet_MobileNetV3Large_K200_UK100_Epoch100.pth
