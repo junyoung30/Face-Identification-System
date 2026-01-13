@@ -5,5 +5,6 @@ __pycache__/
 data/raw/
 data/cropped/
 data/gallery/
+weights/
 
 .env
